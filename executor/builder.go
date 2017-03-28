@@ -500,10 +500,11 @@ func (b *executorBuilder) buildAggregation(v *plan.PhysicalAggregation) Executor
 
 func (b *executorBuilder) buildSelection(v *plan.Selection) Executor {
 	exec := &SelectionExec{
-		Src:       b.build(v.Children()[0]),
-		Condition: expression.ComposeCNFCondition(b.ctx, v.Conditions...),
-		schema:    v.Schema(),
-		ctx:       b.ctx,
+		Src:            b.build(v.Children()[0]),
+		schema:         v.Schema(),
+		ctx:            b.ctx,
+		scanController: v.ScanController,
+		Conditions:     v.Conditions,
 	}
 	return exec
 }
@@ -572,7 +573,6 @@ func (b *executorBuilder) buildTableScan(v *plan.PhysicalTableScan) Executor {
 		byItems:     v.GbyItemsPB,
 		orderByList: v.SortItemsPB,
 	}
-	st.scanConcurrency, b.err = getScanConcurrency(b.ctx)
 	return st
 }
 
@@ -599,7 +599,6 @@ func (b *executorBuilder) buildIndexScan(v *plan.PhysicalIndexScan) Executor {
 		aggFields:      v.AggFields,
 		byItems:        v.GbyItemsPB,
 	}
-	st.scanConcurrency, b.err = getScanConcurrency(b.ctx)
 	return st
 }
 
